@@ -1,0 +1,19 @@
+{
+  "p": 0.5,
+  "q": 3.0,
+  "gamma": 1.0,
+  "init_id": "diag_pos",
+  "x0": [
+    0.9,
+    0.7
+  ],
+  "solution": [
+    0.6586021280663916,
+    0.120742329844237
+  ],
+  "psi_initial": 1.194351076214644,
+  "psi_final": 0.7991753815159703,
+  "psi_decrease": 0.39517569469867375,
+  "max_feasibility_residual_after_step0": 0.00010297652154034331,
+  "num_iterations": 18
+}

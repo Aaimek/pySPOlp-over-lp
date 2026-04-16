@@ -1,0 +1,19 @@
+{
+  "p": 0.25,
+  "q": 2.0,
+  "gamma": 1.0,
+  "init_id": "axis_x1",
+  "x0": [
+    1.0,
+    0.05
+  ],
+  "solution": [
+    0.7500385011676801,
+    1.54978431788173e-135
+  ],
+  "psi_initial": 1.9945992583854288,
+  "psi_final": 0.7879108234223525,
+  "psi_decrease": 1.2066884349630764,
+  "max_feasibility_residual_after_step0": 3.850116768011613e-05,
+  "num_iterations": 18
+}
