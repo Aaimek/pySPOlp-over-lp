@@ -3,6 +3,7 @@
 *.png
 *.zip
 .DS_Store
+!docs/validation_assets/*.png
 
 # local stage/progress notes
 stage*_report.md
@@ -12,6 +13,7 @@ app_v1_report.md
 
 # generated experiment/recovery artifacts
 spoq_parity_outputs/
+matlab_parity/spoq_parity_outputs/
 spoq_solver_exploration/
 spoq_simulated_recovery_smoke/
 spoq_simulated_recovery_warm_smoke/
