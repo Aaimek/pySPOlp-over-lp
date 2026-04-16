@@ -1,0 +1,8 @@
+{
+  "case_name": "identity_2d",
+  "final_x_difference_norm": 3.4021815010030383e-16,
+  "final_psi_difference_abs": 1.942890293094024e-16,
+  "final_feasibility_difference_abs": 4.85722573273506e-17,
+  "max_path_x_difference_norm": 6.280369834735101e-16,
+  "max_path_psi_difference_abs": 4.718447854656915e-16
+}
