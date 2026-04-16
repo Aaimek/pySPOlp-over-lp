@@ -1,9 +1,10 @@
-# Presentation
-[Video presentation/demo](https://youtu.be/aMhJsjYpfdc)
 
 # pySPOQ (Python SPOQ toolbox + interactive webapp)
 
-Short project note:
+## Presentation
+[Video presentation/demo](https://youtu.be/aMhJsjYpfdc)
+
+## Short project note:
 
 - Core SPOQ penalty + gradient + metric implemented
 - Prox / inner solver implemented
