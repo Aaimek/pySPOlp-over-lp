@@ -8,7 +8,14 @@ Produces:
 
 from __future__ import annotations
 
+from pathlib import Path
+import sys
+
 import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from plotly_spoq_viz import plotly_spoq_2d_contour, plotly_spoq_3d_surface
 from spoq_viz import (

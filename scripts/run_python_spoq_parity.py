@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import sys
 
 import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from spoq_core import spoq_penalty
 from spoq_solver import run_spoq_solver
