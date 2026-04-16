@@ -13,10 +13,18 @@ Validation/proof is summarized here:
 
 - `docs/VALIDATION_SUMMARY.md`
 
-Run the app locally:
+## Start (quick)
 
 ```bash
+# Create a venv using whatever you use, then:
+pip install -r requirements.txt
 python3 -m streamlit run webapp/app.py
+```
+The web-app will open and you're ready to go.
+
+Run tests:
+```bash
+pytest -q tests/
 ```
 
 ## Quick validation (MATLAB parity)
