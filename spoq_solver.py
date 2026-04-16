@@ -1,4 +1,4 @@
-"""Minimal forward-backward SPOQ solver without trust-region logic."""
+"""SPOQ outer solver logic, including MATLAB-style metric modes."""
 
 from __future__ import annotations
 
@@ -26,6 +26,11 @@ class SolverHistory:
     psi_values: list[float]
     feasibility_residuals: list[float]
     step_norms: list[float]
+    relative_errors: list[float]
+    metric_mode: int
+    metric_diags: list[Array]
+    trust_region_radii: list[float | None]
+    trust_region_shrinks: list[int]
 
 
 def _as_vector(x: Array | list[float] | tuple[float, ...], *, name: str) -> Array:
@@ -33,6 +38,25 @@ def _as_vector(x: Array | list[float] | tuple[float, ...], *, name: str) -> Arra
     if arr.ndim != 1:
         raise ValueError(f"{name} must be a one-dimensional vector.")
     return arr
+
+
+def compute_lipschitz(alpha: float, beta: float, eta: float, p: float, q: float, n: int) -> float:
+    """Compute the MATLAB `ComputeLipschitz.m` constant."""
+    l1 = p * alpha ** (p - 2.0) / beta**p
+    l2 = p / (2.0 * alpha**2) * max(1.0, (n * alpha**p / beta**p) ** 2)
+    l3 = (q - 1.0) / eta**2
+    return float(l1 + l2 + l3)
+
+
+def _relative_error(x_new: Array, x_old: Array) -> float:
+    """Match MATLAB stopping criterion as closely as practical."""
+    denom = float(np.linalg.norm(x_old) ** 2)
+    numer = float(np.linalg.norm(x_new - x_old) ** 2)
+    if denom > 0.0:
+        return numer / denom
+    if numer == 0.0:
+        return 0.0
+    return float(np.inf)
 
 
 def run_spoq_solver(
@@ -44,20 +68,17 @@ def run_spoq_solver(
     max_iter: int,
     gamma: float,
     *,
+    metric_mode: int = 1,
     prox_max_iter: int = 5000,
     prox_prec: float = 1e-12,
     rho: float = 0.0,
 ) -> tuple[Array, SolverHistory]:
-    """Run a minimal SPOQ forward-backward solver.
+    """Run the SPOQ outer solver with MATLAB-style metric modes.
 
-    The update follows:
-    1. compute gradient of the SPOQ penalty
-    2. compute diagonal metric A
-    3. build descent proposal u = x - gamma * grad / A
-    4. compute x_next via the validated PPXA+ prox routine
-
-    No trust-region logic is used here. By default, ``rho=0`` is used in the
-    metric, which corresponds to the simplest majorant choice from stage 1.
+    Metric modes follow `FB_PPXALpLq.m`:
+    - `0`: global Lipschitz metric
+    - `1`: variable metric without trust region
+    - `2`: trust-region variable metric
     """
     if eta < 0.0:
         raise ValueError("eta must be non-negative.")
@@ -65,6 +86,8 @@ def run_spoq_solver(
         raise ValueError("max_iter must be positive.")
     if gamma <= 0.0:
         raise ValueError("gamma must be strictly positive.")
+    if metric_mode not in (0, 1, 2):
+        raise ValueError("metric_mode must be one of {0, 1, 2}.")
 
     x = _as_vector(x0, name="x0").copy()
     D_arr = np.asarray(D, dtype=np.float64)
@@ -78,23 +101,59 @@ def run_spoq_solver(
     if y_arr.shape != (m,):
         raise ValueError("y shape must match the number of rows of D.")
 
+    lipschitz = compute_lipschitz(params.alpha, params.beta, params.eta, params.p, params.q, n)
+
     history_xs = [x.copy()]
     history_psi = [spoq_penalty(x, params.alpha, params.beta, params.eta, params.p, params.q)]
     history_feas = [float(max(np.linalg.norm(D_arr @ x - y_arr) - eta, 0.0))]
     history_steps = [0.0]
+    history_errors = [0.0]
+    history_metric_diags = [np.full(n, np.nan, dtype=np.float64)]
+    history_radii: list[float | None] = [None]
+    history_shrinks = [0]
 
     for _ in range(max_iter):
         grad = spoq_grad(x, params.alpha, params.beta, params.eta, params.p, params.q)
-        metric_diag = spoq_metric_diag(x, params.alpha, params.beta, params.eta, params.p, params.q, rho=rho)
-        B = metric_diag / gamma
-        u = x - gamma * grad / metric_diag
-        prox_result = prox_ppxa_plus(D_arr, B, u, y_arr, eta, J=prox_max_iter, prec=prox_prec)
-        x_next = prox_result.z
+        bwhile = 0
+
+        if metric_mode == 0:
+            metric_diag = np.full(n, lipschitz, dtype=np.float64)
+            B = metric_diag / gamma
+            u = x - (1.0 / B) * grad
+            x_next = prox_ppxa_plus(D_arr, B, u, y_arr, eta, J=prox_max_iter, prec=prox_prec).z
+            accepted_radius: float | None = None
+        elif metric_mode == 1:
+            metric_diag = spoq_metric_diag(x, params.alpha, params.beta, params.eta, params.p, params.q, rho=0.0)
+            B = metric_diag / gamma
+            u = x - (1.0 / B) * grad
+            x_next = prox_ppxa_plus(D_arr, B, u, y_arr, eta, J=prox_max_iter, prec=prox_prec).z
+            accepted_radius = 0.0
+        else:
+            ro = float(np.sum(np.abs(x) ** params.q) ** (1.0 / params.q))
+            while True:
+                metric_diag = spoq_metric_diag(x, params.alpha, params.beta, params.eta, params.p, params.q, rho=ro)
+                B = metric_diag / gamma
+                u = x - (1.0 / B) * grad
+                x_next = prox_ppxa_plus(D_arr, B, u, y_arr, eta, J=prox_max_iter, prec=prox_prec).z
+                if float(np.sum(np.abs(x_next) ** params.q) ** (1.0 / params.q)) < ro:
+                    ro = ro / 2.0
+                    bwhile += 1
+                else:
+                    break
+            accepted_radius = ro
 
         history_xs.append(x_next.copy())
         history_psi.append(spoq_penalty(x_next, params.alpha, params.beta, params.eta, params.p, params.q))
         history_feas.append(float(max(np.linalg.norm(D_arr @ x_next - y_arr) - eta, 0.0)))
         history_steps.append(float(np.linalg.norm(x_next - x)))
+        history_errors.append(_relative_error(x_next, x))
+        history_metric_diags.append(metric_diag.copy())
+        history_radii.append(accepted_radius)
+        history_shrinks.append(bwhile)
+
+        if history_errors[-1] < prox_prec:
+            x = x_next
+            break
         x = x_next
 
     history = SolverHistory(
@@ -102,6 +161,11 @@ def run_spoq_solver(
         psi_values=history_psi,
         feasibility_residuals=history_feas,
         step_norms=history_steps,
+        relative_errors=history_errors,
+        metric_mode=metric_mode,
+        metric_diags=history_metric_diags,
+        trust_region_radii=history_radii,
+        trust_region_shrinks=history_shrinks,
     )
     return x, history
 
