@@ -1,8 +1,0 @@
-{
-  "case_name": "nonidentity_2d",
-  "final_x_difference_norm": 2.2887833992611227e-16,
-  "final_psi_difference_abs": 3.122502256758253e-17,
-  "final_feasibility_difference_abs": 3.191891195797325e-16,
-  "max_path_x_difference_norm": 4.442111658486589e-16,
-  "max_path_psi_difference_abs": 1.1102230246251565e-16
-}

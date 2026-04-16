@@ -1,2 +1,18 @@
 *.csv
 *.html
+*.png
+*.zip
+.DS_Store
+
+# local stage/progress notes
+stage*_report.md
+spoq_parity_report.md
+compare_with_matlab.md
+app_v1_report.md
+
+# generated experiment/recovery artifacts
+spoq_parity_outputs/
+spoq_solver_exploration/
+spoq_simulated_recovery_smoke/
+spoq_simulated_recovery_warm_smoke/
+spoq_simulated_recovery_cold_smoke/
