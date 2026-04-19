@@ -6,6 +6,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from plotly_spoq_viz import PLOTLY_SPOQ_SCENE_3D
 from spoq_core import spoq_penalty
 from spoq_viz import SpoqParams, spoq_1d_values, spoq_2d_grid_values
 
@@ -149,7 +150,7 @@ def penalty_3d_trajectory_figure(
                 marker=dict(size=4, color=np.arange(len(trajectory)), colorscale="Plasma"),
             )
         )
-    fig.update_layout(title=title, scene=dict(xaxis_title="x1", yaxis_title="x2", zaxis_title="SPOQ"))
+    fig.update_layout(title=title, scene=PLOTLY_SPOQ_SCENE_3D)
     return fig
 
 

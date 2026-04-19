@@ -24,6 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from plotly_spoq_viz import PLOTLY_SPOQ_SCENE_3D
 from spoq_solver import plot_solver_trajectory_on_spoq_contour, run_spoq_solver
 from spoq_viz import SpoqParams, spoq_2d_grid_values
 
@@ -167,7 +168,7 @@ def _plotly_surface_with_trajectory(
     )
     fig.update_layout(
         title=title,
-        scene=dict(xaxis_title="x1", yaxis_title="x2", zaxis_title="SPOQ"),
+        scene=PLOTLY_SPOQ_SCENE_3D,
     )
     return fig
 

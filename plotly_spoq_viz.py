@@ -7,6 +7,14 @@ import plotly.graph_objects as go
 
 from spoq_viz import SpoqParams, spoq_2d_grid_values
 
+# Equal visual length for x1, x2, and SPOQ axes; tick labels keep the true data ranges.
+PLOTLY_SPOQ_SCENE_3D = {
+    "xaxis_title": "x1",
+    "yaxis_title": "x2",
+    "zaxis_title": "SPOQ",
+    "aspectmode": "cube",
+}
+
 
 def plotly_spoq_2d_contour(
     x1: np.ndarray,
@@ -53,10 +61,6 @@ def plotly_spoq_3d_surface(
     )
     fig.update_layout(
         title=title or f"SPOQ surface (p={params.p}, q={params.q})",
-        scene=dict(
-            xaxis_title="x1",
-            yaxis_title="x2",
-            zaxis_title="SPOQ",
-        ),
+        scene=PLOTLY_SPOQ_SCENE_3D,
     )
     return fig

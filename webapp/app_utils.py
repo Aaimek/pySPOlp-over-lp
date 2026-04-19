@@ -6,7 +6,18 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from load_spoq_data_paper_style import PaperStyleSpoqData, load_paper_style_dataset_a, load_paper_style_dataset_b
 from load_spoq_data_simulated import SimulatedSpoqData, load_spoq_data_simulated
+
+DATASET_PAPER_STYLE_A = "Paper-style A (N=1000, P=48)"
+DATASET_PAPER_STYLE_B = "Paper-style B (N=1000, P=94)"
+
+# Datasets where xi (and xtrue/y) come from the generator, not the toy sliders.
+DATASET_DATA_DRIVEN = (
+    "Simulated toolbox dataset",
+    DATASET_PAPER_STYLE_A,
+    DATASET_PAPER_STYLE_B,
+)
 from run_spoq_recovery import _snr_db
 from spoq_solver import SolverHistory, run_spoq_solver
 from spoq_viz import SpoqParams
@@ -53,7 +64,7 @@ def make_problem_data(
     diag_a: float = 1.0,
     diag_b: float = 0.5,
     simulated_seed: int = 0,
-) -> tuple[ProblemData, SimulatedSpoqData | None]:
+) -> tuple[ProblemData, SimulatedSpoqData | PaperStyleSpoqData | None]:
     """Create supported problem instances for the app."""
     if dataset_name == "Toy 2D":
         D = np.eye(2, dtype=float)
@@ -117,6 +128,40 @@ def make_problem_data(
                 xi=sim.xi,
                 is_2d=False,
                 description="MATLAB-style simulated sparse signal dataset with Toeplitz convolution matrix.",
+            ),
+            sim,
+        )
+    if dataset_name == DATASET_PAPER_STYLE_A:
+        sim = load_paper_style_dataset_a(seed=simulated_seed)
+        return (
+            ProblemData(
+                name=dataset_name,
+                xtrue=sim.xtrue,
+                D=sim.K,
+                y=sim.y,
+                xi=sim.xi,
+                is_2d=False,
+                description=(
+                    "Paper-style synthetic instance (not an exact paper experiment): N=1000, P=48, "
+                    "sparse nonnegative spikes, Gaussian noise, ξ = √N σ (Toeplitz kernel as in the simulated loader)."
+                ),
+            ),
+            sim,
+        )
+    if dataset_name == DATASET_PAPER_STYLE_B:
+        sim = load_paper_style_dataset_b(seed=simulated_seed)
+        return (
+            ProblemData(
+                name=dataset_name,
+                xtrue=sim.xtrue,
+                D=sim.K,
+                y=sim.y,
+                xi=sim.xi,
+                is_2d=False,
+                description=(
+                    "Paper-style synthetic instance (not an exact paper experiment): N=1000, P=94, "
+                    "sparse nonnegative spikes, Gaussian noise, ξ = √N σ (Toeplitz kernel as in the simulated loader)."
+                ),
             ),
             sim,
         )
